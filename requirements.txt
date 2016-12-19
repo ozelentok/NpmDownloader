@@ -1,3 +1,1 @@
 node-semver
-curio
-curio_http

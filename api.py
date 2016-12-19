@@ -1,47 +1,54 @@
-import curio
+import tarfile
+import re
+import codecs
+import json
+
 import npm_api
 import version_utils
 
-async def wait_for_all_tasks(tasks):
-    for task in tasks:
-        await task.join()
+PACKAGE_JSON_PATH_PATTERN = re.compile(r'^[^\/]+\/package\.json$')
 
-async def download_package(name, download_dir):
-    latest_version = await add_version_for(name)
-    await npm_api.download_tar_ball_of(name, latest_version, download_dir)
-    dependencies = await get_dependencies_with_versions(name, latest_version)
-    tasks = []
+def download_package(name, version, download_dir):
+    if version is None:
+        version = add_version_for(name)
+    file_path = npm_api.download_tar_ball_of(name, version, download_dir)
+    dependencies = get_dependencies_from_tar_gz(file_path)
+    return get_latest_dependencies(dependencies)
+
+def add_version_for(name):
+    return npm_api.get_latest_version_of(name)
+
+def get_dependencies_from_tar_gz(file_path):
+    package_info = get_package_json_from_tar_gz(file_path)
+    if 'dependencies' not in package_info:
+        return {}
+    return package_info['dependencies']
+
+def get_package_json_from_tar_gz(file_path):
+    with tarfile.open(file_path, 'r:gz') as tar_file:
+        for internal_path in tar_file.getnames():
+            if not PACKAGE_JSON_PATH_PATTERN.match(internal_path):
+                continue
+            member = tar_file.getmember(internal_path)
+            with tar_file.extractfile(member) as file_stream:
+                return parse_package_json(file_stream)
+    raise ValueError('Failed to find package.json')
+
+def parse_package_json(file_stream):
+    data = file_stream.read()
+    if data.startswith(codecs.BOM_UTF8):
+        encoded_data = data.decode('utf-8-sig')
+    else:
+        encoded_data = data.decode('utf-8')
+    return json.loads(encoded_data)
+
+def get_latest_dependencies(dependencies):
+    dependencies_versions = {}
     for package, version in dependencies.items():
-        tasks.append(await curio.spawn(download_dependencies({package: version}, download_dir)))
-    for t in tasks:
-        await t.join()
+        print('Getting {}@{} latest satisfying version'.format(package, version))
+        dependencies_versions[package] = get_latest_satisfying_version(package, version)
+    return dependencies_versions
 
-async def download_dependencies(dependencies, download_dir):
-    download_queue = curio.Queue()
-    await download_queue.put(dependencies)
-    while not download_queue.empty():
-        packages = await download_queue.get()
-        for package, version in packages.items():
-            await download_dependency(package, version, download_dir)
-            await download_queue.put(await get_dependencies_with_versions(package, version))
-        await download_queue.task_done()
-
-async def download_dependency(name, version, download_dir):
-    await npm_api.download_tar_ball_of(name, version, download_dir)
-
-async def add_version_for(name):
-    return await npm_api.get_latest_version_of(name)
-
-async def get_dependencies_with_versions(name, ver):
-    dependencies = await npm_api.get_dependencies_of(name, ver)
-    tasks = {}
-    for package, version in dependencies.items():
-        tasks[package] = await curio.spawn(get_latest_satisfying_version(package, version))
-    dependencies_with_versions = {}
-    for package, task in tasks.items():
-        dependencies_with_versions[package] = await task.join()
-    return dependencies_with_versions
-
-async def get_latest_satisfying_version(name, version):
-    versions = await npm_api.get_versions_of(name)
+def get_latest_satisfying_version(name, version):
+    versions = npm_api.get_versions_of(name)
     return version_utils.get_lastest_satisfying_version(versions, version)

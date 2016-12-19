@@ -1,5 +1,7 @@
 def is_uri(version):
-    if type(version) is not str:
+    if version is None:
+        return False
+    if isinstance(version, (str, )):
         return False
     if version.startswith('http://'):
         return True

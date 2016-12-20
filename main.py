@@ -2,6 +2,7 @@ import argparse
 import multiprocessing
 import re
 import api
+import utils
 
 PACKAGE_WITH_VERSION_PATTERN = re.compile(r'^(.+)@(.+)$')
 NUM_OF_WORKERS = 4
@@ -18,7 +19,7 @@ def create_package_queue(packages_file):
     package_queue = multiprocessing.JoinableQueue()
     with open(packages_file, 'r') as input_file:
         for line in input_file:
-            package = line.strip()
+            package = utils.normalize_package(line.strip())
             version = None
             pattern_match = PACKAGE_WITH_VERSION_PATTERN.match(package)
             if pattern_match:
@@ -31,7 +32,7 @@ def start_package_downloaders(package_queue, output_dir):
     workers = []
     for _ in range(NUM_OF_WORKERS):
         worker = multiprocessing.Process(target=packages_downloader, args=(package_queue, output_dir))
-        worker .start()
+        worker.start()
         workers.append(worker)
     return workers
 
@@ -58,6 +59,7 @@ def packages_downloader(package_queue, output_dir):
             dependencies = api.download_package(package[0], package[1], output_dir)
             for sub_package, sub_package_version in dependencies.items():
                 package_queue.put((sub_package, sub_package_version))
+            print('Finished {}'.format(package[0]))
         except Exception as e:
             print('Failed to download {}\nException: {}'.format(package[0], e))
         package_queue.task_done()

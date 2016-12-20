@@ -1,5 +1,17 @@
 import semver
-from uri_utils import is_uri
+
+def is_uri(version):
+    if version is None:
+        return False
+    if isinstance(version, (str, )):
+        return False
+    if version.startswith('http://'):
+        return True
+    if version.startswith('https://'):
+        return True
+    if version.startswith('git://'):
+        return True
+    return False
 
 def get_lastest_satisfying_version(versions, ver):
     if is_uri(ver):

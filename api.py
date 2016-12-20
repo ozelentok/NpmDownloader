@@ -18,7 +18,7 @@ def download_package(name, version, download_dir):
     return get_latest_dependencies(dependencies)
 
 def add_version_for(name):
-    return npm_api.get_latest_version_of(name)
+    return npm_api.get_registry_package_info(name)['version']
 
 def get_dependencies_from_tar_gz(file_path):
     package_info = get_package_json_from_tar_gz(file_path)
@@ -34,7 +34,7 @@ def get_package_json_from_tar_gz(file_path):
             member = tar_file.getmember(internal_path)
             with tar_file.extractfile(member) as file_stream:
                 return parse_package_json(file_stream)
-    raise ValueError('Failed to find package.json')
+    return {}
 
 def parse_package_json(file_stream):
     data = file_stream.read()

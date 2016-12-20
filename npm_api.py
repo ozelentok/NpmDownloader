@@ -34,6 +34,7 @@ def get_latest_of(name):
     return content['versions'][content['dist-tags']['latest']]
 
 def get_latest_version_of(name):
+    #TODO: Check if this is used and is correct
     content = get_latest_of(name)
     return content['version']
 
@@ -42,11 +43,13 @@ def download_tar_ball_of(name, version, download_dir):
     url = build_url(name, version)
     parent_dir = os.path.join(download_dir, name)
     os.makedirs(parent_dir, exist_ok=True)
+    file_path = os.path.join(parent_dir, file_name)
+    if os.path.exists(file_path):
+        return (file_path, False)
     download_stream = urllib.request.urlopen(url)
     print('Started download of: {}'.format(file_name))
-    file_path = os.path.join(parent_dir, file_name)
     with urllib.request.urlopen(url) as download_stream:
         with open(file_path, 'wb') as file_stream:
             shutil.copyfileobj(download_stream, file_stream)
     print('Finished download of: {}'.format(file_name))
-    return file_path
+    return (file_path, True)

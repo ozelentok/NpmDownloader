@@ -52,11 +52,15 @@ def main():
 def packages_downloader(package_queue, output_dir):
     while True:
         package = package_queue.get()
-        if package is None:
-            break
-        dependencies = api.download_package(package[0], package[1], output_dir)
-        for sub_package, sub_package_version in dependencies.items():
-            package_queue.put((sub_package, sub_package_version))
+        try:
+            if package is None:
+                break
+            print('Downloading {}'.format(package[0]))
+            dependencies = api.download_package(package[0], package[1], output_dir)
+            for sub_package, sub_package_version in dependencies.items():
+                package_queue.put((sub_package, sub_package_version))
+        except Exception as e:
+            print('Failed to download {}\nException: {}'.format(package[0], e))
         package_queue.task_done()
 
 if __name__ == '__main__':

@@ -11,7 +11,9 @@ PACKAGE_JSON_PATH_PATTERN = re.compile(r'^[^\/]+\/package\.json$')
 def download_package(name, version, download_dir):
     if version is None:
         version = add_version_for(name)
-    file_path = npm_api.download_tar_ball_of(name, version, download_dir)
+    file_path, was_downloaded = npm_api.download_tar_ball_of(name, version, download_dir)
+    if not was_downloaded:
+        return {}
     dependencies = get_dependencies_from_tar_gz(file_path)
     return get_latest_dependencies(dependencies)
 

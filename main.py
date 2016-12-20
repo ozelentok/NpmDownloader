@@ -1,11 +1,10 @@
 import argparse
-import queue
-import threading
+import multiprocessing
 import re
 import api
 
 PACKAGE_WITH_VERSION_PATTERN = re.compile(r'^(.+)@(.+)$')
-NUM_OF_WORKER_THREADS = 4
+NUM_OF_WORKERS = 4
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Download npm packages including dependencies')
@@ -16,7 +15,7 @@ def parse_args():
     return parser.parse_args()
 
 def create_package_queue(packages_file):
-    package_queue = queue.Queue()
+    package_queue = multiprocessing.JoinableQueue()
     with open(packages_file, 'r') as input_file:
         for line in input_file:
             package = line.strip()
@@ -29,12 +28,12 @@ def create_package_queue(packages_file):
     return package_queue
 
 def start_package_downloaders(package_queue, output_dir):
-    worker_threads = []
-    for _ in range(NUM_OF_WORKER_THREADS):
-        worker_thread = threading.Thread(target=packages_downloader, args=(package_queue, output_dir))
-        worker_thread.start()
-        worker_threads.append(worker_thread)
-    return worker_threads
+    workers = []
+    for _ in range(NUM_OF_WORKERS):
+        worker = multiprocessing.Process(target=packages_downloader, args=(package_queue, output_dir))
+        worker .start()
+        workers.append(worker)
+    return workers
 
 def stop_package_downloaders(package_queue, workers):
     for i in range(len(workers)):

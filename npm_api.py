@@ -2,8 +2,13 @@ import os
 import urllib.request
 import json
 import shutil
+import fasteners
 
 import utils
+
+LOCKS_DIR = 'Locks'
+
+os.makedirs(LOCKS_DIR, exist_ok=True)
 
 def get_json(url):
     response = urllib.request.urlopen(url).read()
@@ -28,9 +33,16 @@ def download_tar_ball_of(name, version, download_dir):
     file_path = os.path.join(parent_dir, file_name)
     if os.path.exists(file_path):
         return (file_path, False)
-    print('Started download of: {}'.format(file_name))
-    with urllib.request.urlopen(url) as download_stream:
-        with open(file_path, 'wb') as file_stream:
-            shutil.copyfileobj(download_stream, file_stream)
-    print('Finished download of: {}'.format(file_name))
-    return (file_path, True)
+
+    lock_path = os.path.join(LOCKS_DIR, '{}-{}'.format(name, file_name))
+    file_lock = fasteners.InterProcessLock(lock_path)
+    with fasteners.try_lock(file_lock) as got_file_lock:
+        if not got_file_lock:
+            return (file_path, False)
+
+        print('Started download of: {}'.format(file_name))
+        with urllib.request.urlopen(url) as download_stream:
+            with open(file_path, 'wb') as file_stream:
+                shutil.copyfileobj(download_stream, file_stream)
+        print('Finished download of: {}'.format(file_name))
+        return (file_path, True)

@@ -1,7 +1,8 @@
 import argparse
 import multiprocessing
 import re
-import api
+from api import NpmPackageDownloader
+from npm_api import NpmRegistryClient
 import utils
 
 PACKAGE_WITH_VERSION_PATTERN = re.compile(r'^(.+)@(.+)$')
@@ -50,19 +51,24 @@ def main():
     stop_package_downloaders(package_queue, workers)
 
 def packages_downloader(package_queue, output_dir):
+    pacakge_downloader = NpmPackageDownloader(output_dir)
     while True:
         package = package_queue.get()
         try:
             if package is None:
                 break
             print('Downloading {}'.format(package[0]))
-            dependencies = api.download_package(package[0], package[1], output_dir)
+            package_info, was_downloaded = pacakge_downloader.download_single_package(package[0], package[1])
+            if not was_downloaded:
+                continue
+            dependencies = NpmRegistryClient.get_latest_dependencies_version(package_info.get_dependencies())
             for sub_package, sub_package_version in dependencies.items():
                 package_queue.put((sub_package, sub_package_version))
             print('Finished {}'.format(package[0]))
         except Exception as e:
             print('Failed to download {}\nException: {}'.format(package[0], e))
-        package_queue.task_done()
+        finally:
+            package_queue.task_done()
 
 if __name__ == '__main__':
     main()

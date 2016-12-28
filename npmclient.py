@@ -7,7 +7,7 @@ import fasteners
 import utils
 import version_utils
 
-class NpmRegistryClient:
+class NpmClient:
 
     @classmethod
     def _get_json(cls, url: str):

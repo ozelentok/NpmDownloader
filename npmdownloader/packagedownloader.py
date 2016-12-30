@@ -8,14 +8,14 @@ class NpmPackageDownloader:
     def __init__(self, download_dir: str):
         self._download_dir = download_dir
 
-    def download_single_package(self, name: str, version: str) -> (NpmPackage, bool):
+    def download_single_package(self, name: str, version: str=None) -> (NpmPackage, bool):
         if version is None:
             version = NpmClient.get_package_latest_version(name)
         file_path, was_downloaded = NpmClient.download_tar_ball_of(name, version, self._download_dir)
         package_info = NpmPackage(name=name, version=version, file_path=file_path)
         return package_info, was_downloaded
 
-    def download_package(self, name: str, version: str):
+    def download_package(self, name: str, version: str=None):
         package_queue = queue.Queue()
         if version is None:
             version = NpmClient.get_package_latest_version(name)

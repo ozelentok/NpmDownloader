@@ -4,8 +4,7 @@ import json
 import shutil
 import fasteners
 
-import utils
-import version_utils
+from . import utils
 
 class NpmClient:
 
@@ -61,4 +60,4 @@ class NpmClient:
     @classmethod
     def get_latest_satisfying_version(cls, name, version) -> str:
         versions = cls.get_package_versions(name)
-        return version_utils.find_lastest_satisfying_version(versions, version)
+        return utils.find_lastest_satisfying_version(versions, version)

@@ -1,8 +1,8 @@
 import argparse
 
-from multipackagedownloader import MultiPackageDownloader
+from .multipackagedownloader import MultiPackageDownloader
 
-def parse_args():
+def main():
     parser = argparse.ArgumentParser(description='Download npm packages including dependencies')
     parser.add_argument(
         '-f', '--packages-file', required=True,
@@ -13,16 +13,13 @@ def parse_args():
     parser.add_argument(
         '-c', '--workers-count', required=True, type=int,
         help='Number of worker processes to spawn')
-    return parser.parse_args()
+    args = parser.parse_args()
 
-def main():
-    args = parse_args()
     downloader = MultiPackageDownloader(args.packages_file, args.download_dir, args.workers_count)
-    print('multi package downloader starting')
+    print('Package downloader started')
     downloader.start()
     downloader.wait()
-    print('multi package downloader finished')
-
+    print('Package downloader finished')
 
 if __name__ == '__main__':
     main()

@@ -2,13 +2,13 @@ import multiprocessing
 import re
 import sys
 
-from npmclient import NpmClient
-from packagedownloader import NpmPackageDownloader
-import utils
+from .npmclient import NpmClient
+from .packagedownloader import NpmPackageDownloader
+from . import utils
 
 class MultiPackageDownloader:
 
-    PACKAGE_WITH_VERSION_PATTERN = re.compile(r'^(.+)@(.+)$')
+    _PACKAGE_WITH_VERSION_PATTERN = re.compile(r'^(.+)@(.+)$')
 
     def __init__(self, package_list_file_path: str, download_dir: str, num_of_workers: int):
         self._package_queue = multiprocessing.JoinableQueue()
@@ -23,7 +23,7 @@ class MultiPackageDownloader:
             for line in input_file:
                 package = utils.normalize_package(line.strip())
                 version = None
-                pattern_match = MultiPackageDownloader.PACKAGE_WITH_VERSION_PATTERN.match(package)
+                pattern_match = MultiPackageDownloader._PACKAGE_WITH_VERSION_PATTERN.match(package)
                 if pattern_match:
                     package = pattern_match.group(1)
                     version = pattern_match.group(2)

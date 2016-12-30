@@ -1,5 +1,5 @@
-from setuptools import setup
 import os
+from setuptools import setup
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -7,14 +7,14 @@ def read(fname):
 setup(
     name='npmdownloader',
     packages=['npmdownloader'],
-    version='1.0.0a1',
+    version='1.0.0a2',
     description='NPM Package Downloader',
     long_description=read('README.rst'),
     author='Oz Elentok',
     author_email='oz.elen@gmail.com',
     url='https://github.com/ozelentok/npmdownloader',
-    download_url='https://github.com/ozelentok/npmdownloader/tarball/1.0.1a',
-    keywords=['npm', 'nodejs', 'sinopia', 'verdaccio', 'offline'],
+    download_url='https://github.com/ozelentok/npmdownloader/tarball/1.0.0a2',
+    keywords='npm nodejs sinopia verdaccio offline',
     install_requires=['node-semver', 'fasteners'],
     license='MIT',
     classifiers=[

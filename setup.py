@@ -13,7 +13,7 @@ setup(
     author='Oz Elentok',
     author_email='oz.elen@gmail.com',
     url='https://github.com/ozelentok/npmdownloader',
-    download_url='https://github.com/ozelentok/npmdownloader/tarball/0.1',
+    download_url='https://github.com/ozelentok/npmdownloader/tarball/1.0.1a',
     keywords=['npm', 'nodejs', 'sinopia', 'verdaccio', 'offline'],
     install_requires=['node-semver', 'fasteners'],
     license='MIT',

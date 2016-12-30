@@ -9,7 +9,7 @@ setup(
     packages=['npmdownloader'],
     version='1.0.0a1',
     description='NPM Package Downloader',
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     author='Oz Elentok',
     author_email='oz.elen@gmail.com',
     url='https://github.com/ozelentok/npmdownloader',

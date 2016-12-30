@@ -1,10 +1,15 @@
 from setuptools import setup
+import os
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name='npmdownloader',
     packages=['npmdownloader'],
     version='1.0.0a1',
     description='NPM Package Downloader',
+    long_description=read('README.md'),
     author='Oz Elentok',
     author_email='oz.elen@gmail.com',
     url='https://github.com/ozelentok/npmdownloader',

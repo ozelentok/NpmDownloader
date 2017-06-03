@@ -1,6 +1,6 @@
 import semver
 
-NPM_REGISTRY_URL = 'http://registry.npmjs.org'
+NPM_REGISTRY_URL = 'https://registry.npmjs.org'
 
 def build_all_versions_url(name):
     return '{}/{}'.format(NPM_REGISTRY_URL, name)
@@ -52,3 +52,19 @@ def find_lastest_satisfying_version(versions, ver):
 
 def parse_version(ver):
     return '>0.0.0' if ver == 'latest' else ver
+
+async def copyfileobj(fsrc, fdst, length=16*1024):
+    while True:
+        buf = await fsrc.read(length)
+        if not buf:
+            break
+        await fdst.write(buf)
+
+def multi_pop(queue, count=10):
+    items = []
+    try:
+        for _ in range(count):
+            items.append(queue.pop())
+    except IndexError:
+        pass
+    return items

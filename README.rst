@@ -19,26 +19,20 @@ Downloading using the CLI:
  
 .. code:: bash
 
-    $ python -m npmdownloader -f [PACKAGE_LIST] -o [DOWNLOAD_DIR] -c [NUM_OF_WORKER_PROCESS]
+    $ python -m npmdownloader -f [PACKAGE_FILE_LIST] -o [DOWNLOAD_DIR] -c [NUM_OF_WORKER_PROCESSES]
 
-Downloading a package from code:
+Downloading a package using code:
 
 .. code:: python
 
   from npmdownloader import NpmPackageDownloader
 
   downloader = NpmPackageDownloader('out_dir')
-  #Download package and get depedencies from tarball
-  #If the tarball already exists, the download will be skipped
-  package_info, was_downloaded = downloader.download_single('react', version='15.4.1')
+  # Download a package and its depedencies as tarballs
+  # if a package tarball already exists, the download will be skipped
+  downloader.download('react', version='15.4.1')
 
-  #Extract information from the tarball package.json
-  package_json = package_info.get_package_json()
-
-  #Extract dependencies dictionary (package_name => version)
-  dependencies = package_info.get_dependencies()
-
-Downloading multiple packages from code:
+Downloading multiple packages using code:
 
 .. code:: python
 

@@ -1,7 +1,9 @@
 import codecs
 import json
 import re
+import io
 import tarfile
+import aiofiles
 
 class NpmPackage:
 
@@ -14,14 +16,19 @@ class NpmPackage:
         self.version = version
         self.file_path = file_path
 
-    def get_dependencies(self) -> dict:
-        package_info = self.get_package_json()
-        if 'dependencies' not in package_info:
-            return {}
-        return package_info['dependencies']
+    async def get_dependencies(self) -> dict:
+        package_info = await self.get_package_json()
+        dependencies = {}
+        if 'dependencies' in package_info:
+            dependencies.update(package_info['dependencies'])
+        if 'peerDependencies' in package_info:
+            dependencies.update(package_info['peerDependencies'])
+        return dependencies
 
-    def get_package_json(self) -> dict:
-        with tarfile.open(self.file_path, 'r:gz') as tar_file:
+    async def get_package_json(self) -> dict:
+        async with aiofiles.open(self.file_path, "rb") as tar_file:
+            tar_mem_stream = io.BytesIO(await tar_file.read())
+        with tarfile.open(fileobj=tar_mem_stream, mode='r:gz') as tar_file:
             for internal_path in tar_file.getnames():
                 if not NpmPackage.PACKAGE_JSON_PATH_PATTERN.match(internal_path):
                     continue

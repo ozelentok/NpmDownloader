@@ -15,7 +15,7 @@ setup(
     url='https://github.com/ozelentok/npmdownloader',
     download_url='https://github.com/ozelentok/npmdownloader/tarball/1.0.0a2',
     keywords='npm nodejs sinopia verdaccio offline',
-    install_requires=['node-semver', 'fasteners'],
+    install_requires=['node-semver', 'fasteners', 'aiohttp', 'aiofiles'],
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',

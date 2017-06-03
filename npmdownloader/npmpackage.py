@@ -18,9 +18,12 @@ class NpmPackage:
 
     async def get_dependencies(self) -> dict:
         package_info = await self.get_package_json()
-        if 'dependencies' not in package_info:
-            return {}
-        return package_info['dependencies']
+        dependencies = {}
+        if 'dependencies' in package_info:
+            dependencies.update(package_info['dependencies'])
+        if 'peerDependencies' in package_info:
+            dependencies.update(package_info['peerDependencies'])
+        return dependencies
 
     async def get_package_json(self) -> dict:
         async with aiofiles.open(self.file_path, "rb") as tar_file:

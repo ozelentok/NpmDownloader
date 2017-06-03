@@ -58,7 +58,7 @@ async def copyfileobj(fsrc, fdst, length=16*1024):
         buf = await fsrc.read(length)
         if not buf:
             break
-        fdst.write(buf)
+        await fdst.write(buf)
 
 def multi_pop(queue, count=10):
     items = []

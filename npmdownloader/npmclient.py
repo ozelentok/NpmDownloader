@@ -1,22 +1,29 @@
 import os
-import shutil
 import aiohttp
 import aiofiles
+import fasteners
 
 from . import utils
+from .logger import log
 
 class NpmClient:
 
     def __init__(self):
+        self._session = None
+
+    def connect(self):
         self._session = aiohttp.ClientSession(raise_for_status=True)
-        self._files_open = set()
+
+    def close(self):
+        self._session.close()
 
     async def _get_json(self, url: str):
+        log.debug('GET %s', url)
         async with self._session.get(url) as response:
             return await response.json()
 
     async def get_package_latest_version(self, name: str):
-        return await self.get_registry_package_info(name, version='latest')['version']
+        return (await self.get_registry_package_info(name, version='latest'))['version']
 
     async def get_package_versions(self, name: str):
         content = await self._get_json(utils.build_all_versions_url(name))
@@ -35,14 +42,18 @@ class NpmClient:
         parent_dir = os.path.join(download_dir, name)
         os.makedirs(parent_dir, exist_ok=True)
         file_path = os.path.join(parent_dir, file_name)
-        if file_path in self._files_open or os.path.exists(file_path):
+        if os.path.exists(file_path):
             return (file_path, False)
-        self._files_open.add(file_path)
 
-        async with self._session.get(url) as response:
-            async with aiofiles.open(file_path, 'wb') as file_stream:
-                await utils.copyfileobj(response, file_stream)
-        return (file_path, True)
+        file_lock = fasteners.InterProcessLock(file_path)
+        with fasteners.try_lock(file_lock) as got_file_lock:
+            if not got_file_lock:
+                return (file_path, False)
+
+            async with self._session.get(url) as response:
+                async with aiofiles.open(file_path, 'wb') as file_stream:
+                    await utils.copyfileobj(response.content, file_stream)
+            return (file_path, True)
 
     async def get_latest_dependencies_version(self, dependencies: dict) -> dict:
         dependencies_versions = {}

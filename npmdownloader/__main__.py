@@ -1,6 +1,7 @@
 import argparse
 
 from .multipackagedownloader import MultiPackageDownloader
+from .logger import log
 
 def main():
     parser = argparse.ArgumentParser(description='Download npm packages including dependencies')
@@ -16,10 +17,10 @@ def main():
     args = parser.parse_args()
 
     downloader = MultiPackageDownloader(args.packages_file, args.download_dir, args.workers_count)
-    print('Package downloader started')
+    log.info('Multi Download Started')
     downloader.start()
     downloader.wait()
-    print('Package downloader finished')
+    log.info('Multi Download Finished')
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 import collections
 import asyncio
-from typing import List
+from typing import List, Dict
 
 from .npmclient import NpmClient
 from .npmpackage import NpmPackage
@@ -27,10 +27,19 @@ class NpmPackageDownloader:
             log.info('Downloaded %s@%s', name, version)
             return package_info, was_downloaded
         except:
-            log.exception('Error Downloading %s', name)
+            log.error('Error downloading %s', name)
             return (None, False)
 
-    async def download_packages(self, packages):
+    async def _get_package_latest_dependencies(self, package: NpmPackage) -> Dict[str, str]:
+        try:
+            required_dependencies = await package.get_dependencies()
+            normalized_dependencies = {utils.normalize_package(k): v for k, v in required_dependencies.items()}
+            return await self._client.get_latest_dependencies_version(normalized_dependencies)
+        except:
+            log.error('Error getting %s dependencies', package.name)
+            return {}
+
+    async def download_packages(self, packages: List[NpmPackage]):
         self._client.connect()
         package_queue = collections.deque(packages)
 
@@ -42,7 +51,7 @@ class NpmPackageDownloader:
                 package, was_downloaded = task.result()
                 if not was_downloaded:
                     continue
-                dependencies = await self._client.get_latest_dependencies_version(await package.get_dependencies())
+                dependencies = await self._get_package_latest_dependencies(package)
                 for sub_package, sub_package_version in dependencies.items():
                     package_queue.appendleft((sub_package, sub_package_version))
             additional_packages = utils.multi_pop(package_queue, min(len(tasks_done), self._max_tasks))
@@ -50,7 +59,7 @@ class NpmPackageDownloader:
             tasks = tasks_pending
         self._client.close()
 
-    def download_multiple(self, packages: List):
+    def download_multiple(self, packages: List[NpmPackage]):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.download_packages(packages))
 

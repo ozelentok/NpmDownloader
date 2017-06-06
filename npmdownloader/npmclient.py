@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 import aiohttp
 import aiofiles
 import fasteners
@@ -18,9 +19,13 @@ class NpmClient:
         self._session.close()
 
     async def _get_json(self, url: str):
-        log.debug('GET %s', url)
-        async with self._session.get(url) as response:
-            return await response.json()
+        try:
+            log.debug('GET %s', url)
+            async with self._session.get(url) as response:
+                return await response.json()
+        except:
+            log.error('Failed to get JSON from %s', url)
+            raise
 
     async def get_package_latest_version(self, name: str):
         return (await self.get_registry_package_info(name, version='latest'))['version']
@@ -55,10 +60,13 @@ class NpmClient:
                     await utils.copyfileobj(response.content, file_stream)
             return (file_path, True)
 
-    async def get_latest_dependencies_version(self, dependencies: dict) -> dict:
+    async def get_latest_dependencies_version(self, dependencies: Dict[str, str]) -> Dict[str, str]:
         dependencies_versions = {}
         for package, version in dependencies.items():
-            dependencies_versions[package] = await self.get_latest_satisfying_version(package, version)
+            try:
+                dependencies_versions[package] = await self.get_latest_satisfying_version(package, version)
+            except:
+                log.error('Failed getting %s version', package.name)
         return dependencies_versions
 
     async def get_latest_satisfying_version(self, name, version) -> str:

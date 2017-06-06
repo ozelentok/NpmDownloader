@@ -45,7 +45,7 @@ class NpmPackageDownloader:
                 dependencies = await self._client.get_latest_dependencies_version(await package.get_dependencies())
                 for sub_package, sub_package_version in dependencies.items():
                     package_queue.appendleft((sub_package, sub_package_version))
-            additional_packages = utils.multi_pop(package_queue, max(len(tasks_done), self._max_tasks))
+            additional_packages = utils.multi_pop(package_queue, min(len(tasks_done), self._max_tasks))
             tasks_pending.update([self._download_single_package(n, v) for n, v in additional_packages])
             tasks = tasks_pending
         self._client.close()

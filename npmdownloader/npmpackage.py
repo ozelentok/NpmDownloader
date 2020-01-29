@@ -3,34 +3,34 @@ import json
 import re
 import io
 import tarfile
+from typing import Dict, NamedTuple, Any
+
 import aiofiles
 
-class NpmPackage:
+_PACKAGE_JSON_PATH_PATTERN = re.compile(r'^[^\/]+\/package\.json$')
 
-    PACKAGE_JSON_PATH_PATTERN = re.compile(r'^[^\/]+\/package\.json$')
 
-    __slots__ = ('name', 'version', 'file_path')
+class NpmPackage(NamedTuple):
 
-    def __init__(self, name: str, version: str, file_path: str):
-        self.name = name
-        self.version = version
-        self.file_path = file_path
+    name: str
+    version: str
+    file_path: str
 
-    async def get_dependencies(self) -> dict:
+    async def get_dependencies(self) -> Dict[str, Any]:
         package_info = await self.get_package_json()
-        dependencies = {}
+        dependencies: Dict[str, Any] = {}
         if 'dependencies' in package_info:
             dependencies.update(package_info['dependencies'])
         if 'peerDependencies' in package_info:
             dependencies.update(package_info['peerDependencies'])
         return dependencies
 
-    async def get_package_json(self) -> dict:
-        async with aiofiles.open(self.file_path, "rb") as tar_file:
+    async def get_package_json(self) -> Dict[str, Any]:
+        async with aiofiles.open(self.file_path, 'rb') as tar_file:
             tar_mem_stream = io.BytesIO(await tar_file.read())
         with tarfile.open(fileobj=tar_mem_stream, mode='r:gz') as tar_file:
             for internal_path in tar_file.getnames():
-                if not NpmPackage.PACKAGE_JSON_PATH_PATTERN.match(internal_path):
+                if not _PACKAGE_JSON_PATH_PATTERN.match(internal_path):
                     continue
                 member = tar_file.getmember(internal_path)
                 with tar_file.extractfile(member) as file_stream:

@@ -1,33 +1,43 @@
+from typing import Optional
+
 import semver
 
 NPM_REGISTRY_URL = 'https://registry.npmjs.org'
 
-def build_all_versions_url(name):
+
+def build_all_versions_url(name: str) -> str:
     return '{}/{}'.format(NPM_REGISTRY_URL, name)
 
-def build_version_url(name, version):
+
+def build_version_url(name: str, version: str) -> str:
     return '{}/{}/{}'.format(NPM_REGISTRY_URL, name, version)
 
-def build_tarball_url(name, version):
+
+def build_tarball_url(name: str, version: str) -> str:
     return '{}/{}/-/{}'.format(NPM_REGISTRY_URL, name.replace('%2f', '/'), build_filename(name, version))
 
-def build_filename(name, version):
+
+def build_filename(name: str, version: str) -> str:
     return '{}-{}.tgz'.format(unscope_name(name), version)
 
-def normalize_package(name):
+
+def normalize_package(name: str) -> str:
     if is_scoped(name):
         return name.replace('/', '%2f')
     return name
 
-def is_scoped(name):
+
+def is_scoped(name: str) -> bool:
     return name.startswith('@')
 
-def unscope_name(scoped_name):
+
+def unscope_name(scoped_name: str) -> str:
     if is_scoped(scoped_name):
         return scoped_name.split('%2f')[1]
     return scoped_name
 
-def is_uri(version):
+
+def is_uri(version: Optional[str]) -> bool:
     if version is None:
         return False
     if not isinstance(version, (str, )):
@@ -40,18 +50,22 @@ def is_uri(version):
         return True
     return False
 
-def parse_uri(uri):
+
+def parse_uri(uri: str) -> str:
     if uri.startswith('git:'):
         return uri.replace('git:', 'http:').replace('.git', '/archive/master.zip')
     return uri
+
 
 def find_lastest_satisfying_version(versions, ver):
     if is_uri(ver):
         return parse_uri(ver)
     return semver.max_satisfying(versions, parse_version(ver), loose=True)
 
+
 def parse_version(ver):
     return '>0.0.0' if ver == 'latest' else ver
+
 
 async def copyfileobj(fsrc, fdst, length=16*1024):
     while True:
@@ -59,6 +73,7 @@ async def copyfileobj(fsrc, fdst, length=16*1024):
         if not buf:
             break
         await fdst.write(buf)
+
 
 def multi_pop(queue, count=10):
     items = []

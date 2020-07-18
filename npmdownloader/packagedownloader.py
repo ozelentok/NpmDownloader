@@ -29,7 +29,7 @@ class NpmPackageDownloader:
                 log.info('Skipping %s@%s, already downloaded', name, version)
             return package_info
         except Exception:
-            log.error('Error downloading %s', name)
+            log.exception('Error downloading %s', name)
             return None
 
     async def _get_package_latest_dependencies(self, package: NpmPackage) -> Dict[str, str]:
@@ -38,7 +38,7 @@ class NpmPackageDownloader:
             normalized_dependencies = {utils.normalize_package(k): v for k, v in required_dependencies.items()}
             return await self._client.get_latest_dependencies_version(normalized_dependencies)
         except Exception:
-            log.error('Error getting %s dependencies', package.name)
+            log.exception('Error getting %s dependencies', package.name)
             return {}
 
     async def _download_packages(self, packages: List[Tuple[str, Optional[str]]]):

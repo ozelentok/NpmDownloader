@@ -22,7 +22,7 @@ class NpmClient:
             async with self._session.get(url) as response:
                 return await response.json()
         except Exception:
-            log.error('Failed to get JSON from %s', url)
+            log.exception('Failed to get JSON from %s', url)
             raise
 
     async def get_package_latest_version(self, name: str) -> str:
@@ -64,7 +64,7 @@ class NpmClient:
             try:
                 dependencies_versions[package] = await self.get_latest_satisfying_version(package, version)
             except Exception:
-                log.error('Failed getting %s-%s latest version', package, version)
+                log.exception('Failed getting %s-%s latest version', package, version)
         return dependencies_versions
 
     async def get_latest_satisfying_version(self, name, version) -> str:
